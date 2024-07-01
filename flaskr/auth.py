@@ -69,7 +69,7 @@ def login():
 
 
 # Logout of the session
-@bp.rout('/logout')
+@bp.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
