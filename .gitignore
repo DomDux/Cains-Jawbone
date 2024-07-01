@@ -2,6 +2,6 @@
 .env/
 
 */__pycache__/
-flaskr.sqlite
+instance/flaskr.sqlite
 
 /notes.xlsx
