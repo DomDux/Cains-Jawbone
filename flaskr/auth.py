@@ -59,6 +59,7 @@ def login():
             error = 'Incorrect password.'
 
         if error is None:
+            print("successful login. now we go to "+url_for('index'))
             session.clear()
             session['user_id'] = user['id']
             return redirect(url_for('index'))
@@ -67,6 +68,19 @@ def login():
 
     return render_template('auth/login.html')
 
+
+# Once the user's id is stored in the session, we can use it on subsequent requests
+# Check at the beginning of each request what the username is (if the user is logged in)
+@bp.before_app_request
+def load_logged_in_user():
+    user_id = session.get('user_id')
+
+    if user_id is None:
+        g.user = None
+    else:
+        g.user = get_db().execute(
+            'SELECT * FROM user WHERE id = ?', (user_id,)
+        ).fetchone()
 
 # Logout of the session
 @bp.route('/logout')
