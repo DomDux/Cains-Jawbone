@@ -1,5 +1,6 @@
 # Ignore files that you didn't write
-.env/
+env/
+.env
 
 */__pycache__/
 instance/flaskr.sqlite
