@@ -24,3 +24,25 @@ def close_db(e=None):
 
     if db is not None:
         db.close()
+
+
+def init_db():
+    db = get_db()
+
+    with current_app.open_resource('schema.sql') as f:
+        db.executescript(f.read().decode('utf-8'))
+
+# This decorator defines a cmd line command (init-bd) which calls the following code
+@click.command('init-db')
+def init_db_command():
+    """Clear the existing data and create new tables."""
+    init_db()
+    click.echo('Initialised the database')
+
+
+# We need to initialise the above commands when our app is started otherwise it won't know to run them
+# teardown_appcontext means "call this when cleaning up after a response"
+# cli.add_command means "make this a command that flask can execute"
+def init_app(app):
+    app.teardown_appcontext(close_db)
+    app.cli.add_command(init_db_command)

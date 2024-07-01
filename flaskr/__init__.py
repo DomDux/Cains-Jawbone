@@ -24,7 +24,7 @@ def create_app(test_config=None):
         # load the test config if passed in
         app.config.from_mapping(test_config)
 
-        
+
     # Ensure the instance folder exists
     try:
         os.makedirs(app.instance_path)
@@ -38,4 +38,8 @@ def create_app(test_config=None):
         return 'Hello World!'
     
 
+    # Database connection config
+    from .import db
+    db.init_app(app)
+    
     return app
