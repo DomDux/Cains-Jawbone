@@ -41,5 +41,9 @@ def create_app(test_config=None):
     # Database connection config
     from .import db
     db.init_app(app)
+
+    # Blueprints:  Views are functions to respond to requests.  Blueprints are groups of related views.
+    from . import auth
+    app.register_blueprint(auth.bp)
     
     return app
