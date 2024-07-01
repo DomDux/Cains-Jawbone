@@ -1,5 +1,5 @@
 # Ignore files that you didn't write
-env/
+
 .env
 
 */__pycache__/
