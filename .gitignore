@@ -1,7 +1,6 @@
 # Ignore files that you didn't write
-.env/
 
-*/__pycache__/
-instance/flaskr.sqlite
+venv
+__pycache__
 
 /notes.xlsx
