@@ -1,8 +1,16 @@
 blinker==1.8.2
 click==8.1.7
 colorama==0.4.6
+coverage==7.5.4
+exceptiongroup==1.2.1
 Flask==3.0.3
+-e git+https://github.com/DomDux/Cains-Jawbone.git@e1d0a9c7c42755a2e23ea74b088262f881a37abc#egg=flaskr
+iniconfig==2.0.0
 itsdangerous==2.2.0
 Jinja2==3.1.4
 MarkupSafe==2.1.5
+packaging==24.1
+pluggy==1.5.0
+pytest==8.2.2
+tomli==2.0.1
 Werkzeug==3.0.3

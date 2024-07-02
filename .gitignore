@@ -1,7 +1,6 @@
 # Ignore files that you didn't write
 
-.env
-
-*/__pycache__/
+venv
+__pycache__
 
 /notes.xlsx
