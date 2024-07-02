@@ -45,9 +45,8 @@ def create_app(test_config=None):
     # Blueprints:  
     # Views are functions to respond to requests.  
     # Blueprints are groups of related views.
-    from . import auth, blog
+    from . import auth
     app.register_blueprint(auth.bp)
-    app.register_blueprint(blog.bp)
     app.add_url_rule('/', endpoint='index')
     
     return app
