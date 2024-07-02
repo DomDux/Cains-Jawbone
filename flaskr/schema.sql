@@ -48,7 +48,7 @@ CREATE TABLE nodes (
     'person', 'location', 'event', 'note', 'tag'
   )
 );
-/* 
+
 CREATE TABLE relationships (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -118,4 +118,3 @@ CREATE TABLE events (
   CONSTRAINT FK_Node FOREIGN KEY (id) REFERENCES nodes (id)
 );
 
- */
