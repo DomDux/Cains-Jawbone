@@ -29,7 +29,7 @@ CREATE TABLE user (
 
 -- Tags for filtering nodes
 CREATE TABLE tags (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id INTEGER PRIMARY KEY,
   created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deleted INTEGER DEFAULT 0,
   name TEXT NOT NULL
@@ -42,11 +42,12 @@ CREATE TABLE nodes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   node_type TEXT NOT NULL,
-  deleted INTEGER DEFAULT 0
+  deleted INTEGER DEFAULT 0,     -- Set to 1 if this node is "soft deleted", so it's not lost but also not used in queries
+  merged INTEGER DEFAULT NULL    -- If nodes are merged together, set this to the "master" node id
 
-  CONSTRAINT CHK_Type CHECK node_type IN (
+  /* CONSTRAINT CHK_Type CHECK node_type IN (
     'person', 'location', 'event', 'note', 'tag'
-  )
+  ) */
 );
 
 CREATE TABLE relationships (
@@ -55,8 +56,8 @@ CREATE TABLE relationships (
   name TEXT NOT NULL,
   start INTEGER NOT NULL,
   end INTEGER NOT NULL,
-  relationship TEXT NON NULL, -- Description of the relationship e.g. Mother
-  pihsnoitaler TEXT NON NULL,  -- Reverse relationship description e.g. Son
+  rel TEXT NON NULL, -- Description of the relationship e.g. Mother
+  ler TEXT NON NULL,  -- Reverse relationship description e.g. Son
   deleted INTEGER DEFAULT 0,
 
   CONSTRAINT FK_Start FOREIGN KEY (start) REFERENCES nodes (id),
