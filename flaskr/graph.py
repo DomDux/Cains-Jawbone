@@ -32,7 +32,7 @@ from flask import (
 )
 from werkzeug.exceptions import abort
 
-from flaskr.db import get_db
+from .models import *
 
 bp = Blueprint('graph', __name__, url_prefix='/graph')
 
@@ -44,45 +44,50 @@ bp = Blueprint('graph', __name__, url_prefix='/graph')
 # Get a node with a given id
 @bp.route('/node/<int:id>', methods=["GET"])
 def get_node(id):
-    node = get_db().execute(
-        'SELECT id, created, node_type, deleted, merged'
-        ' FROM nodes n'
-        ' WHERE n.id = ?',
-        (id,)
-    ).fetchone()
-    if node  is None:
+    node = Node.query.get(id)
+    if node is None:
         abort(404, f"Node id {id} doesn't exist.")
 
-    return node
+    return {
+        'id': node.id,
+        'created': node.created,
+        'deleted': node.deleted,
+        'node_type': node.node_type
+    }
 
 # Get a relationship with a given id
 @bp.route('/relationship/<int:id>', methods=["GET"])
 def get_relationship(id):
-    rel = get_db().execute(
-        'SELECT id, created, name, start, end, rel, ler, deleted'
-        ' FROM relationships r'
-        ' WHERE r.id = ?',
-        (id,)
-    ).fetchone()
+    rel = Relationship.query.get(id)
     if rel is None:
         abort(404, f"Relationship id {id} doesn't exist.")
 
-    return rel
+    return {
+        'id':rel.id,
+        'created': rel.created,
+        'name' : rel.name,
+        'start' : rel.start,
+        'end' : rel.end,
+        'rel': rel.rel,
+        'ler' : rel.ler,
+        'deleted' : rel.deleted
+    }
 
 
 #######################
 #  CREATE
 #######################
 
-# TODO:  Function to query nodes and find an appropriate primary key based on the next greated value of the 'id' field
-# TODO:  Create a new node via ENDPOINT
 @bp.route('/node/create', methods=["GET", "POST"])
-def create():
+def create_node():
     if request.method != "POST":
         return request.form
-    node_type = request.json.get("node_type")
+    data = request.get_json()
+    node_type = data.get('node_type')
+
     error = None
-    
+    if not node_type:
+        error = "Node type is required"
     permitted_node_types = (
         'person', 'location', 'event', 'note', 'tag'
     )
@@ -92,20 +97,70 @@ def create():
     if error is not None:
         return error, 400
     else:
-        db = get_db()
-        db.execute(
-            'INSERT INTO nodes (node_type)'
-            ' VALUES (?);',
-            (node_type)
-        )
-        db.commit()
-        created_id = db.execute(
-            'SELECT LAST_INSERTED_ID();'
-        ).fetchone()
-        return created_id
+        new_node = Node(node_type=node_type)
+        db.session.add(new_node)
+        db.session.commit()
+        db.session.refresh(new_node)
+        created_id = new_node.id
+        return str(created_id)
 
-# TODO:  Create a new relationship via function
+# Create a new relationship via function
+def _create_relationship(start, end, rel, ler):
+    start_node = Node.query.get(start)
+    if not start_node:
+        abort(400, f"There doesn't exist a start node with id {start}")
+        
+    end_node = Node.query.get(end)
+    if not end_node:
+        abort(400, f"There doesn't exist a end node with id {end}")
+
+    existing_rels = Relationship.query.filter_by(start=start, end=end).all()
+
+    if len(existing_rels) > 0:
+        abort(400, f"There already exists a relationship between nodes {start} and {end}")
+
+    new_rel = Relationship(
+        start=start,
+        end=end,
+        rel=rel,
+        ler=ler
+    )
+    db.session.add(new_rel)
+    db.session.commit()
+    db.session.refresh(new_rel)
+    created_id = new_rel.id
+    return str(created_id), new_rel
+
 # TODO:  Create 2 new relationships via ENDPOINT (1 for forward relationship, 1 for backwards)
+@bp.route('/relationship/create', methods=["POST"])
+def create_relationship():
+    data = request.get_json()
+
+    start = data.get('start')
+    end = data.get('end')
+    forward_relationship = data.get('forward_relationship')
+    reverse_relationship = data.get('reverse_relationship')
+
+    id1, first_rel = _create_relationship(start, end, forward_relationship, reverse_relationship)
+    id2, second_rel = _create_relationship(end, start, reverse_relationship, forward_relationship)
+    return {
+        id1: {
+            'id':first_rel.id,
+            'created':first_rel.created,
+            'start':first_rel.start,
+            'end':first_rel.end,
+            'forward_relationship': first_rel.rel,
+            'reverse_relationship': first_rel.ler
+        },
+        id2: {
+            'id':second_rel.id,
+            'created':second_rel.created,
+            'start':second_rel.start,
+            'end':second_rel.end,
+            'forward_relationship': second_rel.rel,
+            'reverse_relationship': second_rel.ler
+        }
+    }
 
 
 
