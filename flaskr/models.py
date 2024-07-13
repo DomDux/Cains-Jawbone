@@ -73,6 +73,8 @@ class Note(db.Model):
 
     page = db.relationship('Page')
     node = db.relationship('Node', foreign_keys=[node_id])
+    def __repr__(self) -> str:
+        return f"<Note {id}>"
 
 class Person(db.Model):
     __tablename__ = 'people'
@@ -85,6 +87,9 @@ class Person(db.Model):
     node_id = db.Column(db.Integer, db.ForeignKey('nodes.id'), nullable=True)
 
     node = db.relationship('Node', foreign_keys=[node_id])
+
+    def __repr__(self) -> str:
+        return f"<Person {id}>"
 
 class Location(db.Model):
     __tablename__ = 'locations'
@@ -100,6 +105,9 @@ class Location(db.Model):
 
     node = db.relationship('Node', foreign_keys=[node_id])
 
+    def __repr__(self) -> str:
+        return f"<Location {id}>"
+
 class Event(db.Model):
     __tablename__ = 'events'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -111,6 +119,9 @@ class Event(db.Model):
     node_id = db.Column(db.Integer, db.ForeignKey('nodes.id'), nullable=True)
 
     node = db.relationship('Node', foreign_keys=[node_id])
+    
+    def __repr__(self) -> str:
+        return f"<Event {id}>"
 
 if __name__ == '__main__':
     db.create_all()
