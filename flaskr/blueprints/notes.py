@@ -64,6 +64,25 @@ def api_get_notes():
     notes = get_notes(ids)
     return [_return_note(note) for note in notes]
 
+
+# Query for notes containing words
+def search_notes(search_term):
+    notes = Note.query.filter(Note.content.ilike(f"%{search_term}%")).all()
+    return notes
+
+@bp.route('/search', methods=["GET"])
+def api_search_notes():
+    search_terms = request.args.getlist('term')
+    if not search_terms:
+        return []
+    
+    notes = set()
+    for term in search_terms:
+        results = set(search_notes(term))
+        notes.update(results)
+    
+    return [_return_note(n) for n in list(notes)]
+
 ##################
 # UPDATE
 ##################
