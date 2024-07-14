@@ -55,3 +55,22 @@ def api_edit_page_content():
         return "Must provide updated content", 401
     page = edit_page_content(page, new_content)
     return page.content
+
+
+# Search accross all pages
+def search_pages(search_term):
+    pages = Page.query.filter(Page.content.ilike(f"%{search_term}%")).all()
+    return pages
+
+@bp.route('/search', methods=["GET"])
+def api_search_pages():
+    search_terms = request.args.getlist('term')
+    if not search_terms:
+        return []
+    
+    pages = set()
+    for term in search_terms:
+        results = set(search_pages(term))
+        pages.update(results)
+    
+    return [n.page_number for n in list(pages)]
