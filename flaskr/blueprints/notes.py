@@ -1,0 +1,116 @@
+"""
+Here is where we'll add all the views relating to the notes table.   
+Notes are the basis for all of our work going forward so they need to be flexible and able to link to other entities.
+"""
+
+from flask import (
+    Blueprint, request
+)
+from werkzeug.exceptions import abort
+
+from ..models import *
+from .graph import create_node, create_relationship
+
+bp = Blueprint('notes', __name__, url_prefix='/note')
+
+def _return_note(note):
+    return {
+        'id': note.id,
+        'node_id': note.node_id,
+        'page_number': note.page_number,
+        'note_text': note.note_text,
+        'content': note.content,
+        'deleted': note.deleted
+    }
+
+#####################
+# CREATE 
+#####################
+def create_note(page, note_text, content=""):
+    # First we create a node for this object
+    node_id = create_node('note')
+
+    # Second we create an entry in the notes table and link it to the node
+    note = Note(
+        note_text=note_text,
+        page_number=page,
+        content=content,
+        node_id=node_id
+    )
+    db.session.add(note)
+    db.session.commit()
+    db.session.refresh(note)
+    
+    return _return_note(note)
+
+@bp.route('/create', methods=["POST"])
+def api_create_note():
+    data = request.get_json()
+    page = data.get('page_number')
+    note_text = data.get('note_text')
+    content = data.get('content')
+    return create_note(page, note_text, content)
+
+
+##################
+# READ
+##################
+def get_notes(ids):
+    return [Note.query.get_or_404(id) for id in ids]
+
+@bp.route('/', methods=["GET"])
+def api_get_notes():
+    ids = request.args.getlist('id')
+    notes = get_notes(ids)
+    return [_return_note(note) for note in notes]
+
+##################
+# UPDATE
+##################
+def update_note(note, new_content):
+    note.content = new_content
+    db.session.commit()
+    db.session.refresh(note)
+    return note
+
+@bp.route('/update', methods=["PUT"])
+def api_update_note():
+    data = request.get_json()
+    id = request.args.get('id')
+    note = get_notes([id])[0]
+
+    new_content = data.get('content')
+    if new_content is not None:
+        note = update_note(note, new_content)
+    return _return_note(note)
+
+
+##################
+# DELETE
+##################
+def soft_delete_note(note):
+    note.deleted = 1
+    db.session.commit()
+    db.session.refresh(note)
+    return note
+
+@bp.route('/delete', methods=["PUT"])
+def api_soft_delete_note():
+    id = request.args.get('id')
+    note = get_notes([id])[0]
+    note = soft_delete_note(note)
+    return _return_note(note)
+
+def un_delete_note(note):
+    note.deleted = 0
+    db.session.commit()
+    db.session.refresh(note)
+    return note
+
+@bp.route('/undelete', methods=["PUT"])
+def api_un_delete_note():
+    id = request.args.get('id')
+    note = get_notes([id])[0]
+    note = un_delete_note(note)
+    return _return_note(note)
+

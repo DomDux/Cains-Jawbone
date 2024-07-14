@@ -28,11 +28,11 @@ import functools
 import time
 
 from flask import (
-    Blueprint, flash, g, redirect, request, session, url_for
+    Blueprint, request
 )
-from werkzeug.exceptions import abort
+from werkzeug.exceptions import abort, HTTPException
 
-from .models import *
+from ..models import *
 
 bp = Blueprint('graph', __name__, url_prefix='/graph')
 
@@ -60,39 +60,60 @@ def _return_relationship(rel):
 def _relationship_partner(rel):
     return Relationship.query.filter_by(start=rel.end, end=rel.start).first()
 
+#### ERROR HANDLING ####
+
+class NodeNotFoundError(HTTPException):
+    code = 404
+    description = "Node not found."
+
+class InvalidNodeIDError(HTTPException):
+    code = 400
+    description = "Invalid node ID provided."
+
+def handle_node_not_found_error(e):
+    response = {
+        "error": "NodeNotFoundError",
+        "message": e.description
+    }
+    response.status_code = e.code
+    return response
+
+def handle_invalid_node_id_error(e):
+    response = {
+        "error": "InvalidNodeIDError",
+        "message": e.description
+    }
+    response.status_code = e.code
+    return response
+
 
 #######################
 #  READ
 #######################
 
 # Get a node with a given ids
+def get_nodes(ids):
+    response = []
+    for id in ids:
+        node = Node.query.get(id)
+        if node is None:
+            raise NodeNotFoundError()
+            # abort(404, f"Node id {id} doesn't exist.")
+        response.append(_return_node(node))
+    return response
+
 @bp.route('/node', methods=["GET"])
-def get_nodes():
+def api_get_nodes():
     args = request.args
     ids = args.getlist('id')
     if ids is None:
         abort(400, f"An ID must be provided")
     elif not isinstance(ids, list):
         ids = [ids]
-    
-    response = []
-    for id in ids:
-        node = Node.query.get(id)
-        if node is None:
-            abort(404, f"Node id {id} doesn't exist.")
-        
-        response.append(_return_node(node))
-
-    return response
+    return get_nodes(ids)
 
 # Get a relationship with a given ids
-@bp.route('/relationship', methods=["GET"])
-def get_relationships():
-    args = request.args
-    ids = args.getlist('id')
-    if ids is None:
-        abort(400, f"An ID must be provided")
-
+def get_relationships(ids):
     response = []
     for id in ids:
         rel = Relationship.query.get(id)
@@ -101,13 +122,31 @@ def get_relationships():
         response.append(_return_relationship(rel))
     return response
 
+@bp.route('/relationship', methods=["GET"])
+def api_get_relationships():
+    args = request.args
+    ids = args.getlist('id')
+    if ids is None:
+        abort(400, f"An ID must be provided")
+    return get_relationships(ids)
+    
+
 
 #######################
 #  CREATE
 #######################
 
+def create_node(node_type):
+    new_node = Node(node_type=node_type)
+    db.session.add(new_node)
+    db.session.commit()
+    db.session.refresh(new_node)
+    created_id = new_node.id
+    return str(created_id)
+
+
 @bp.route('/node/create', methods=["POST"])
-def create_node():
+def api_create_node():
     if request.method != "POST":
         return request.form
     data = request.get_json()
@@ -125,12 +164,7 @@ def create_node():
     if error is not None:
         return error, 400
     else:
-        new_node = Node(node_type=node_type)
-        db.session.add(new_node)
-        db.session.commit()
-        db.session.refresh(new_node)
-        created_id = new_node.id
-        return str(created_id)
+        return create_node(node_type)
 
 # Create a new relationship via function
 def _create_relationship(start, end, rel, ler):
@@ -159,9 +193,17 @@ def _create_relationship(start, end, rel, ler):
     created_id = new_rel.id
     return str(created_id), new_rel
 
+def create_relationship(start, end, rel, ler):
+    id1, first_rel = _create_relationship(start, end, rel, ler)
+    id2, second_rel = _create_relationship(end, start, rel, ler)
+    return {
+        id1: _return_relationship(first_rel),
+        id2: _return_relationship(second_rel)
+    }
+
 # Create 2 new relationships via ENDPOINT (1 for forward relationship, 1 for backwards)
 @bp.route('/relationship/create', methods=["POST"])
-def create_relationship():
+def api_create_relationship():
     data = request.get_json()
 
     start = data.get('start')
@@ -169,12 +211,7 @@ def create_relationship():
     forward_relationship = data.get('forward_relationship')
     reverse_relationship = data.get('reverse_relationship')
 
-    id1, first_rel = _create_relationship(start, end, forward_relationship, reverse_relationship)
-    id2, second_rel = _create_relationship(end, start, reverse_relationship, forward_relationship)
-    return {
-        id1: _return_relationship(first_rel),
-        id2: _return_relationship(second_rel)
-    }
+    return create_relationship(start, end, forward_relationship, reverse_relationship)
 
 
 

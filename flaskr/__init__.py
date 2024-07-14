@@ -44,9 +44,13 @@ def create_app(test_config=None):
     # Blueprints:  
     # Views are functions to respond to requests.  
     # Blueprints are groups of related views.
-    from . import graph
+    from .blueprints import graph, notes
     # app.register_blueprint(auth.bp)
     app.register_blueprint(graph.bp)
+    app.register_error_handler(graph.NodeNotFoundError, graph.handle_node_not_found_error)
+    app.register_error_handler(graph.InvalidNodeIDError, graph.handle_invalid_node_id_error)
+
+    app.register_blueprint(notes.bp)
     app.add_url_rule('/', endpoint='hello')
     
     return app
