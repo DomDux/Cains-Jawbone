@@ -10,7 +10,7 @@ from werkzeug.exceptions import abort, HTTPException
 from sqlalchemy import inspect
 
 from ..models import *
-from .graph import create_node, create_relationship, merge_nodes
+from .graph import create_node, create_relationship, merge_nodes, soft_delete_node, delete_node
 
 people_bp = Blueprint('people', __name__, url_prefix='/people')
 loc_bp = Blueprint('location', __name__, url_prefix='/location')
@@ -141,6 +141,19 @@ def create_entity(model_class, **kwargs):
     new_entity = create_function(node_id=node_id, **kwargs)
     return new_entity
 
+def soft_delete_entity(entity):
+    entity.deleted = 1
+    db.session.commit()
+    soft_delete_node(Node.query.get(entity.node_id))
+    db.session.refresh(entity)
+    return entity
+
+def hard_delete_entity(entity):
+    node = Node.query.get_or_404(entity.node_id)
+    db.session.delete(entity)
+    delete_node(node)
+    db.session.commit()
+    return None
 
 ######################
 # PEOPLE
