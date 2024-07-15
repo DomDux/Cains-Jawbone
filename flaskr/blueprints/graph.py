@@ -256,15 +256,18 @@ def soft_delete_rel():
         str(reverse_rel.id): _return_relationship(reverse_rel)
     }
 
-# TODO:  Mark node as merged by updating value of merged field.  This is called in conjunction with merge functions in other blueprints
-def _merge_nodes(merged_node, nodes):
+# Mark node as merged by updating value of merged field.  
+# This is called in conjunction with merge functions in other blueprints
+# In the other functions, we create the merged node first and then call this function
+def merge_nodes(merged_node, nodes):
     for node in nodes:
         node.merged = merged_node.id
     db.session.commit()
+    return [merged_node]+nodes
 
 @bp.route('/node/merge',  methods=["PUT", "POST"])
 def merge():
-    nodes = get_nodes()
+    nodes = api_get_nodes()
     nodes_to_merge = [Node.query.get_or_404(n['id'], f"Could not find node {n['id']} to merge") for n in nodes]
         
     node_types = [n.node_type for n in nodes_to_merge]
@@ -276,7 +279,7 @@ def merge():
     db.session.add(new_node)
     db.session.commit()
     db.session.refresh(new_node)
-    _merge_nodes(new_node, nodes_to_merge)
+    merge_nodes(new_node, nodes_to_merge)
     return [_return_node(n) for n in [new_node]+nodes_to_merge]
 
 #######################
