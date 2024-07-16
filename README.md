@@ -51,7 +51,8 @@ FLASK_ENV=development
 which will then mean when we run 
 ```
 flask run
-``` the code will run on `localhost::5000` so we can test the endpoints.
+```
+the code will run on `localhost::5000` so we can test the endpoints.
 
 ### 4. React Frontend
 I am following most of the steps laid out in (this tutorial)[https://blog.miguelgrinberg.com/post/how-to-create-a-react--flask-project] for creating a web app with a Flask backend and React front-end.
