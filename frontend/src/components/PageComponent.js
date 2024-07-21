@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+import '../styles/PageComponent.css';
+
 export default function PageComponent({ pageNo }) {
     const [content, setContent] = useState(null);
     const [loading, setLoading] = useState(true);

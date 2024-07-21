@@ -5,7 +5,7 @@ export default function Navbar() {
 
     return (
       <nav className="Header">
-        Cain's Jawbone
+        <h1>Cain's Jawbone</h1>
       </nav>
     );
   }
