@@ -1,6 +1,17 @@
 """
 All the entities such as people, locations, and events behave in a similar way in relation to other objects.
 I want a single file to look after all of them as they have very similar functions for creation, deletion etc.
+
+    Entity:
+     - Person
+     - Location
+     - Event
+     - Tag
+
+All entities are nodes.  To create an entity, we first create a Node and record it's ID.  We then create an entity
+with THE SAME ID as the node to link the two together.  To create and manage links between entities, we must remember
+that the IDs of entities and their corresponding Nodes are the same. 
+
 """
 
 from flask import (

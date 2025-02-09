@@ -5,13 +5,13 @@ from flask import (
 from .errors import *
 
 
-def get_params(param):
+def get_params(param) -> list:
     args = request.args.getlist(param)
     if not args:
         return []
     return args
     
-def get_json_body(*keys):
+def get_json_body(*keys) -> dict:
     data = request.get_json()
     response = {}
     for key in keys:

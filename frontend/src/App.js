@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import PageComponent from './components/PageComponent';
+import PageComponent, { PageViewComponent } from './components/PageComponent';
 import Navbar from './components/Navbar';
 import ArrowButton from './components/ArrowButton';
 import NoteTab from './components/NoteTab';
@@ -24,7 +24,7 @@ function App() {
 
   const [pageNotes, setPageNotes] = useState([]);
 
-  // Call this every time we change the page 
+  // Call this every time we change the pageNo
   useEffect(() => {
     async function fetchNotes() {
       const data = await getPageNotes(pageNo);
@@ -34,8 +34,8 @@ function App() {
   }, [pageNo]);
 
 
-  console.log("Page Notes: ",   pageNotes);
-  return (
+  //console.log("Page Notes: ",   pageNotes);
+  /* return (
     <div className="App">
       <Navbar />
       <Container>
@@ -58,7 +58,18 @@ function App() {
       </div>
 
     </div>
-  );
+  ); */
+
+
+
+
+  return (
+    <div className='App'>
+      <Navbar />
+      <PageViewComponent pageNumber={pageNo} />
+
+    </div>
+  )
 }
 
 export default App;
