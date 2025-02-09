@@ -40,7 +40,7 @@ def _return_entity(entity):
 # Could we use **kwargs to make this arbitrary???
 def _create_person(node_id, name, content, gender=None):
     person = Person(
-        node_id=node_id,
+        id=node_id,
         name=name,
         content=content,
         gender=gender
@@ -52,7 +52,7 @@ def _create_person(node_id, name, content, gender=None):
 
 def _create_location(node_id, name, content, country, district, town):
     location = Location(
-        node_id=node_id,
+        id=node_id,
         name=name,
         content=content,
         country=country,
@@ -66,7 +66,7 @@ def _create_location(node_id, name, content, country, district, town):
 
 def _create_event(node_id, name, content, date):
     event = Event(
-        node_id=node_id,
+        id=node_id,
         name=name,
         content=content,
         date=date
@@ -81,7 +81,7 @@ def _create_tag(node_id, name):
     if existing_tag is not None:
         raise RecordAlreadyExists(name)
     tag = Tag(
-        node_id=node_id,
+        id=node_id,
         name=name
     )
     db.session.add(tag)
