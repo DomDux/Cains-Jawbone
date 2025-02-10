@@ -50,6 +50,9 @@ export default function PageComponent({ pageNo, onCreateNote }) {
   const [noteContent, setNoteContent] = useState("");
 
 
+  /**
+   * Function to take the selected text and store it in the state
+   */
   const handleTextSelection = () => {
     const selection = window.getSelection();
     if (selection && selection.toString()) {
@@ -59,6 +62,10 @@ export default function PageComponent({ pageNo, onCreateNote }) {
     }
   };
 
+  /**
+   * Function to open the modal to create a new note. 
+   * Called when the user clicks the "Create New Note" button.
+   */
   const openCreateNoteModal = () => {
     if (selectedText) {
       setShowModal(true);
@@ -74,6 +81,9 @@ export default function PageComponent({ pageNo, onCreateNote }) {
     setTextRange(null);
   };
 
+  /**
+   * Function to save the note to the database
+   */
   const handleSaveNote = async () => {
     const noteData = {
       page_number: pageNo,
@@ -101,30 +111,48 @@ export default function PageComponent({ pageNo, onCreateNote }) {
     }
   };
 
-  const applyHighlightToText = (noteId) => {
-    if (textRange) {
+  /**
+   * Given a note ID, apply a highlight to the text it corresponds to.
+   * @param {string} note_text - The text we wish to highlight
+   * @param {number} note_id - The ID of the note
+   */
+  const applyHighlightToText = (note_text, note_id) => {
+    const contentElement = document.querySelector(".page-content p");
+    if (contentElement === null) {
+      return;
+    }
+    console.log(contentElement);
+    const contentText = contentElement.textContent;
+
+    // Find the start and end positions of the note text
+    const startIndex = contentText.indexOf(note_text);
+    const endIndex = startIndex + note_text.length;
+
+    if (startIndex !== -1 && endIndex !== -1) {
+      const range = document.createRange();
+      const startNode = contentElement.firstChild;
+
+      // Set the range to the start and end positions
+      range.setStart(startNode, startIndex);
+      range.setEnd(startNode, endIndex);
+
+      // Create a span element to apply the highlight
       const span = document.createElement("span");
       span.className = "highlighted-text";
-      span.dataset.noteId = noteId;
-      textRange.surroundContents(span);
-      window.getSelection().removeAllRanges(); // Clear selection
+      span.dataset.noteId = note_id;
+      range.surroundContents(span); // Apply the highlight
     }
   };
 
+  /**
+   * Iterate through the notes provided and apply highlights to the text.
+   * @param {Array} notes
+   */
   const applyPersistentHighlights = (notes) => {
     notes.forEach(note => {
-      const range = document.createRange();
-      const contentNode = document.querySelector(`[data-note-id="${note.id}"]`);
-      const startNode = contentNode.childNodes[0];
-      const startOffset = note.startOffset;
-      const endOffset = note.endOffset;
-
-      if (startNode) {
-          range.setStart(startNode, startOffset);
-          range.setEnd(startNode, endOffset);
-          applyHighlightToText(range);
+        applyHighlightToText(note.text, note.id);
       }
-    });
+    );
   };
 
   
@@ -137,6 +165,7 @@ export default function PageComponent({ pageNo, onCreateNote }) {
         const response = await fetch(`/page?page=${pageNo}`);
         const content = await response.text();
         setContent(content);
+        // applyPersistentHighlights(notes);
       } catch (err) {
         setError(err.message);
       }
