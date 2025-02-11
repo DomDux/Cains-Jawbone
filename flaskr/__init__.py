@@ -3,6 +3,7 @@ import os
 from flask import Flask 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_cors import CORS
 
 from .config import Config
 from .models import db
@@ -13,6 +14,8 @@ from .blueprints.pages import populate_pages
 def create_app(test_config=None):
     # We create an app with all configuration files stored relative to the route folder here.
     app = Flask(__name__)
+    CORS(app, resources={r"/page/*": {"origins": "http://localhost:3000"}})
+
     app.config.from_object(Config)
     db.init_app(app)
     migrate = Migrate(app, db)

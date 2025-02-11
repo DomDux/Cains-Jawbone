@@ -1,0 +1,17 @@
+.page-content {
+    text-align: center;
+    background-color: antiquewhite;
+    padding: 1em;
+    height: 600px;
+}
+
+.highlighted-text {
+    background-color: rgba(9, 255, 0, 0.336); /* Faint highlight */
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.highlighted-text:hover,
+.highlighted-text.active {
+    background-color: rgba(255, 255, 0, 0.5); /* Increase opacity on hover or click */
+}

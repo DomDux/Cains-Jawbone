@@ -10,6 +10,7 @@ from werkzeug.exceptions import abort
 
 from ..models import *
 from .graph import create_node, create_relationship
+from ..utils import get_params
 
 bp = Blueprint('notes', __name__, url_prefix='/note')
 
@@ -82,6 +83,21 @@ def api_search_notes():
         notes.update(results)
     
     return [_return_note(n) for n in list(notes)]
+
+# Return all the notes linked to a page
+def get_page_notes(page):
+    notes = Note.query.filter(Note.page_number == page.page_number)
+    return notes
+
+@bp.route('/on-page', methods=["GET"])
+def api_get_page_notes():
+    page_numbers = get_params('id')
+    notes = []
+    for p in page_numbers:
+        page = Page.query.get_or_404(p)
+        note_objects = get_page_notes(page)
+        notes += [_return_note(n) for n in note_objects]
+    return notes
 
 ##################
 # UPDATE

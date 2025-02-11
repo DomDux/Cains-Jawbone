@@ -1,6 +1,17 @@
 """
 All the entities such as people, locations, and events behave in a similar way in relation to other objects.
 I want a single file to look after all of them as they have very similar functions for creation, deletion etc.
+
+    Entity:
+     - Person
+     - Location
+     - Event
+     - Tag
+
+All entities are nodes.  To create an entity, we first create a Node and record it's ID.  We then create an entity
+with THE SAME ID as the node to link the two together.  To create and manage links between entities, we must remember
+that the IDs of entities and their corresponding Nodes are the same. 
+
 """
 
 from flask import (
@@ -11,46 +22,13 @@ from sqlalchemy import inspect
 
 from ..models import *
 from .graph import create_node, create_relationship, merge_nodes, soft_delete_node, delete_node
+from ..utils import get_json_body, get_params
+from ..errors import *
 
 people_bp = Blueprint('people', __name__, url_prefix='/people')
 loc_bp = Blueprint('location', __name__, url_prefix='/location')
 event_bp = Blueprint('event', __name__, url_prefix='/event')
 tag_bp = Blueprint('tag', __name__, url_prefix='/tag')
-
-# Error Handling
-class RequestJSONBodyError(HTTPException):
-    code = 400
-    description = "Error in JSON body passed to request."
-
-    def __init__(self, key, *args, **kwargs):
-        super().__init__(self, key, *args, **kwargs)
-        self.key = key 
-        self.description = f"Error in JSON body passed to request.  Can not read access key: {key}"
-        
-class RecordAlreadyExists(HTTPException):
-    code = 400
-    description = "A record with this data already exists."
-
-    def __init__(self, key, *args, **kwargs):
-        super().__init__(self, key, *args, **kwargs)
-        self.key = key 
-        self.description = f"A record with the data '{key}' already exists."
-
-def handle_bad_json_body_error(e):
-    response = {
-        'error': 'RequestJSONBodyError',
-        'description': e.description,
-        'status_code': 400
-    }
-    return response
-
-def handle_record_already_exists_error(e):
-    response = {
-        'error': 'RecordAlreadyExists',
-        'description': e.description,
-        'status_code': 400
-    }
-    return response
 
 
 # Helpers
@@ -58,21 +36,6 @@ def _return_entity(entity):
     inspector = inspect(type(entity))
     columns = inspector.columns
     return { str(c).split(".")[1] : getattr(entity, str(c).split(".")[1]) for c in columns}
-
-def get_params(param):
-    args = request.args.getlist(param)
-    if not args:
-        return []
-    
-def get_json_body(*keys):
-    data = request.get_json()
-    response = {}
-    for key in keys:
-        new_content = data.get(key)
-        if new_content is None:
-            raise RequestJSONBodyError(key)
-        response[key] = new_content
-    return response
 
 # Could we use **kwargs to make this arbitrary???
 def _create_person(node_id, name, content, gender=None):
@@ -118,7 +81,7 @@ def _create_tag(node_id, name):
     if existing_tag is not None:
         raise RecordAlreadyExists(name)
     tag = Tag(
-        node_id=node_id,
+        id=node_id,
         name=name
     )
     db.session.add(tag)

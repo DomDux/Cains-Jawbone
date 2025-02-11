@@ -26,7 +26,7 @@ class User(db.Model):
 class Tag(db.Model):
     __tablename__ = 'tags'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    created = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created = db.Column(db.DateTime, default=datetime.now, nullable=False)
     deleted = db.Column(db.Integer, default=0)
     name = db.Column(db.String, nullable=False)
 
@@ -36,7 +36,7 @@ class Tag(db.Model):
 class Node(db.Model):
     __tablename__ = 'nodes'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    created = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created = db.Column(db.DateTime, default=datetime.now, nullable=False)
     node_type = db.Column(db.String, nullable=False)
     deleted = db.Column(db.Integer, default=0)
     merged = db.Column(db.Integer, nullable=True)
@@ -47,7 +47,7 @@ class Node(db.Model):
 class Relationship(db.Model):
     __tablename__ = 'relationships'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    created = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created = db.Column(db.DateTime, default=datetime.now, nullable=False)
     start = db.Column(db.Integer, db.ForeignKey('nodes.id'), nullable=False)
     end = db.Column(db.Integer, db.ForeignKey('nodes.id'), nullable=False)
     rel = db.Column(db.String, nullable=False)
@@ -64,7 +64,7 @@ class Note(db.Model):
     __tablename__ = 'notes'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     note_text = db.Column(db.Text, nullable=False)
-    created = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created = db.Column(db.DateTime, default=datetime.now, nullable=False)
     page_number = db.Column(db.Integer, db.ForeignKey('pages.id'), nullable=False)
     content = db.Column(db.Text, nullable=True)
     deleted = db.Column(db.Integer, default=0)
@@ -79,7 +79,7 @@ class Note(db.Model):
 class Person(db.Model):
     __tablename__ = 'people'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    created = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created = db.Column(db.DateTime, default=datetime.now, nullable=False)
     deleted = db.Column(db.Integer, default=0)
     name = db.Column(db.String, nullable=False)
     content = db.Column(db.Text, nullable=False)
@@ -94,7 +94,7 @@ class Person(db.Model):
 class Location(db.Model):
     __tablename__ = 'locations'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    created = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created = db.Column(db.DateTime, default=datetime.now, nullable=False)
     deleted = db.Column(db.Integer, default=0)
     name = db.Column(db.String, nullable=False)
     content = db.Column(db.Text, nullable=False)
@@ -111,7 +111,7 @@ class Location(db.Model):
 class Event(db.Model):
     __tablename__ = 'events'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    created = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created = db.Column(db.DateTime, default=datetime.now, nullable=False)
     deleted = db.Column(db.Integer, default=0)
     name = db.Column(db.String, nullable=False)
     content = db.Column(db.Text, nullable=False)
