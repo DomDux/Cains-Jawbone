@@ -21,22 +21,31 @@ def _return_note(note):
         'page_number': note.page_number,
         'note_text': note.note_text,
         'content': note.content,
-        'deleted': note.deleted
+        'deleted': note.deleted,
+        'text_start': note.text_start,
+        'text_end': note.text_end
     }
 
 #####################
 # CREATE 
 #####################
-def create_note(page, note_text, content=""):
+def create_note(page, note_text, content="", text_start=None, text_end=None):
     # First we create a node for this object
     node_id = create_node('note')
+
+    text_range_valid = text_start is not None and text_end is not None and text_start < text_end
+    if not text_range_valid:
+        text_start = None
+        text_end = None
 
     # Second we create an entry in the notes table and link it to the node
     note = Note(
         note_text=note_text,
         page_number=page,
         content=content,
-        node_id=node_id
+        node_id=node_id,
+        text_start=text_start,
+        text_end=text_end
     )
     db.session.add(note)
     db.session.commit()
@@ -50,7 +59,9 @@ def api_create_note():
     page = data.get('page_number')
     note_text = data.get('note_text')
     content = data.get('content')
-    return create_note(page, note_text, content)
+    text_start = data.get('text_start')
+    text_end = data.get('text_end')
+    return create_note(page, note_text, content, text_start, text_end)
 
 
 ##################

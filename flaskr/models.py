@@ -71,6 +71,10 @@ class Note(db.Model):
     resolved = db.Column(db.Integer, default=0)
     node_id = db.Column(db.Integer, db.ForeignKey('nodes.id'), nullable=True)
 
+    # Indexes for text highlighting
+    text_start = db.Column(db.Integer, nullable=True)
+    text_end = db.Column(db.Integer, nullable=True)
+
     page = db.relationship('Page')
     node = db.relationship('Node', foreign_keys=[node_id])
     def __repr__(self) -> str:
