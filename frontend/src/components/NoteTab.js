@@ -20,7 +20,7 @@
 **********************************************************************************************************************/
 
 
-import React, { useState, useCallback }from "react";
+import React, { useState, useEffect, useCallback }from "react";
 import { Button, Card, Collapse, Form } from "react-bootstrap";
 import ArrowButton from "./ArrowButton";
 
@@ -36,6 +36,8 @@ export default function NoteTab({ data, active = false }) {
     const [isHovered, setIsHovered] = useState(false);
     // Use this to update the content of the tab
     const [content, setContent] = useState(data.content);
+    // State for storing tags
+    const [tags, setTags] = useState([]);
 
     // Memoize the callback to prevent re-creating it on every render
     const toggleIsActive = useCallback(() => {
@@ -98,6 +100,20 @@ export default function NoteTab({ data, active = false }) {
         });
     };
 
+  // Fetch tags when the component mounts
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const tags = await getNoteTags(data.id);
+        setTags(tags);
+      } catch (err) {
+        console.error("Error fetching tags:", err);
+      }
+    };
+
+    fetchTags();
+    console.log(tags)
+  }, [data.id]);
 
     const header = (
         <div
@@ -115,13 +131,6 @@ export default function NoteTab({ data, active = false }) {
             <p>{data.content}</p>
         </div>
     );
-    /*
-    return (
-        <div id={`note-${data.id}`}>
-            {header}
-            {isActive && body}
-        </div>
-    )*/
 
     return (
         <div 
@@ -132,6 +141,9 @@ export default function NoteTab({ data, active = false }) {
             <Card style={{ width: "100%", maxWidth: "600px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}>
                 <Card.Header className="d-flex justify-content-between align-items-center" onClick={toggleIsActive} style={{ cursor: "pointer" }}>
                     <h5 className="mb-0">Note #{data.id}</h5>
+                    <div>
+                        {/* {tags.map(tag => <NoteTag key={tag.id} tag={tag} />)} */}
+                    </div>
                     <ArrowButton direction={isActive ? "up" : "down"} callback={() => ''} />
                 </Card.Header>
                 <Collapse in={isActive}>
@@ -163,10 +175,34 @@ export default function NoteTab({ data, active = false }) {
 
 
 
-
+/**
+ * Fetches the data for a note
+ * @param {number} id The note ID
+ * @returns {Promise<Object>} The note data
+ */
 async function getNoteData(id) {
     const data = fetch(`/note?id=${id}`)
         .then((r) => r.json())
         .catch(err => err);
     return await data
+}
+
+/**
+ * Fetches the tags associated with a note
+ * @param {number} id The note ID
+ * @returns {Promise<Array>} The tags associated with the note
+ */
+async function getNoteTags(id) {
+    const data = fetch(`/note/tags?id=${id}`)
+        .then((r) => r.json())
+        .catch(err => err);
+    return await data
+}
+
+
+function NoteTag({ tag }) {
+    console.log(tag);
+    return (
+        <span className="tag">{tag.name}</span>
+    )
 }

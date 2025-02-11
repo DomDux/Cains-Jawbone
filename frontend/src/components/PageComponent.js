@@ -218,10 +218,6 @@ export default function PageComponent({ pageNo, onCreateNote }) {
       <div onMouseUp={handleTextSelection}>
         <p>{content}</p>
         {selectedText && <Button variant="primary" onClick={openCreateNoteModal}>Create New Note</Button>}
-        {/* Note Tabs */}
-        {/* {notes.map(note => (
-          <NoteTab key={note.id} data={note.content} />
-        ))} */}
         {modalForNewNode}
       </div>
     </div>
@@ -253,6 +249,7 @@ export function PageViewComponent() {
         <Row className='justify-content-md-center'>
           <Col xs={12} md={8} lg={6} xl={4}>
             <ArrowButton direction={'left'} callback={()=> pageNo > 1 && setPageNo(pageNo-1)}/>
+            Page {pageNo}
             <ArrowButton direction={'right'} callback={()=> pageNo < 100 && setPageNo(pageNo+1)}/>
           </Col>
         </Row>
