@@ -10,6 +10,7 @@ def test_create_page(session):
     assert page.content == "Page content"
 
 def test_create_user(session):
+    session.query(User).delete() # Clear the User table
     user = User(username="testuser", password="password")
     session.add(user)
     session.commit()
