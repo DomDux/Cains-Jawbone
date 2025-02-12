@@ -3,6 +3,7 @@ import tempfile
 
 import pytest
 from flaskr import create_app
+from flaskr.models import db
 
 # This mimics the app instanciation in __init__.py
 @pytest.fixture
@@ -12,7 +13,8 @@ def app():
 
     app = create_app({
         'TESTING': True,
-        'DATABASE': db_path,
+        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     })
     
     """
@@ -38,3 +40,12 @@ def client(app):
 @pytest.fixture
 def runner(app):
     return app.test_cli_runner()
+
+
+# Provide a database session for each test
+@pytest.fixture
+def session(app):
+    with app.app_context():
+        db.session.begin_nested()  # Start a savepoint
+        yield db.session
+        db.session.rollback()  # Rollback after test

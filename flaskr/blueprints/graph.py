@@ -267,8 +267,11 @@ def merge_nodes(merged_node, nodes):
 
 @bp.route('/node/merge',  methods=["PUT", "POST"])
 def merge():
-    nodes = api_get_nodes()
-    nodes_to_merge = [Node.query.get_or_404(n['id'], f"Could not find node {n['id']} to merge") for n in nodes]
+    data = request.get_json()
+    node_ids = data.get('id')
+    if not node_ids or not isinstance(node_ids, list):
+        abort(400, "A list of node IDs must be provided")
+    nodes_to_merge = [Node.query.get_or_404(node_id, f"Could not find node {node_id} to merge") for node_id in node_ids]
         
     node_types = [n.node_type for n in nodes_to_merge]
     distinct_node_types = list(set(node_types))
