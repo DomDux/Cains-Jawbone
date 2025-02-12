@@ -25,14 +25,61 @@ def test_get_notes(session):
     assert len(notes) == 1
     assert notes[0].id == note['id']
 
-def test_search_notes(session):
+def test_create_note_invalid_text_range(session):
     page = Page(page_number=1, content="Page content")
     session.add(page)
     session.commit()
-    create_note(page.page_number, "Note text", "Note content", 0, 10)
-    notes = search_notes("Note content")
-    assert len(notes) == 1
-    assert notes[0].content == "Note content"
+    note = create_note(page.page_number, "Note text", "Note content", 10, 0)
+    assert note['text_start'] is None
+    assert note['text_end'] is None
+
+def test_create_note_no_text_range(session):
+    page = Page(page_number=1, content="Page content")
+    session.add(page)
+    session.commit()
+    note = create_note(page.page_number, "Note text", "Note content")
+    assert note['text_start'] is None
+    assert note['text_end'] is None
+
+def test_api_create_note_invalid_text_range(client):
+    response = client.post('/note/create', json={
+        'page_number': 1,
+        'note_text': 'Note text',
+        'content': 'Note content',
+        'text_start': 10,
+        'text_end': 0
+    })
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data['text_start'] is None
+    assert data['text_end'] is None
+
+def test_api_create_note_no_text_range(client):
+    response = client.post('/note/create', json={
+        'page_number': 1,
+        'note_text': 'Note text',
+        'content': 'Note content'
+    })
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data['text_start'] is None
+    assert data['text_end'] is None
+
+def test_api_get_notes_invalid_id(client):
+    response = client.get('/note/?id=9999')
+    assert response.status_code == 404
+
+def test_api_update_note_invalid_id(client):
+    response = client.put('/note/update?id=9999', json={'content': 'Updated content'})
+    assert response.status_code == 404
+
+def test_api_soft_delete_note_invalid_id(client):
+    response = client.put('/note/delete?id=9999')
+    assert response.status_code == 404
+
+def test_api_un_delete_note_invalid_id(client):
+    response = client.put('/note/undelete?id=9999')
+    assert response.status_code == 404
 
 def test_get_page_notes(session):
     page = Page(page_number=1, content="Page content")
