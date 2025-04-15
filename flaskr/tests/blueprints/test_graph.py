@@ -37,11 +37,11 @@ def test_return_relationship(session):
         'deleted': relationship.deleted
     }
 
-def test_create_node(client):
+def test_create_node(client, session):
     response = client.post('/graph/node/create', json={'node_type': 'person'})
     assert response.status_code == 200
     node_id = response.get_data(as_text=True)
-    node = Node.query.get(node_id)
+    node = Node.query.get(int(node_id))
     assert node is not None
     assert node.node_type == 'person'
 
