@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, date
 from flask import Flask, jsonify
 from flaskr.blueprints.entities import (
     people_bp, loc_bp, event_bp, tag_bp,
@@ -25,11 +26,11 @@ def test_create_location(session):
     assert location.town == "Town"
 
 def test_create_event(session):
-    event = create_entity('event', name="Test Event", content="Event content", date="2025-02-11")
+    event = create_entity('event', name="Test Event", content="Event content", date=datetime(2025, 2, 11))
     assert event.id is not None
     assert event.name == "Test Event"
     assert event.content == "Event content"
-    assert event.date == "2025-02-11"
+    assert event.date == datetime(2025, 2, 11)
 
 def test_create_tag(session):
     tag = create_entity('tag', name="Test Tag")

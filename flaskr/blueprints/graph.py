@@ -37,7 +37,8 @@ from ..models import *
 bp = Blueprint('graph', __name__, url_prefix='/graph')
 
 # Helper return functions.  Return a dictionary for the corresponding objects
-def _return_node(node):
+def _return_node(node: Node) -> dict:
+    """Return a dictionary of the node object"""
     return {
         'id': node.id,
         'created': node.created,
@@ -46,7 +47,8 @@ def _return_node(node):
         'node_type': node.node_type
     }
 
-def _return_relationship(rel):
+def _return_relationship(rel: Relationship) -> dict:
+    """Return a dictionary of the relationship object"""
     return {
         'id':rel.id,
         'created': rel.created,
@@ -57,7 +59,8 @@ def _return_relationship(rel):
         'deleted' : rel.deleted
     }
 
-def _relationship_partner(rel):
+def _relationship_partner(rel: Relationship) -> Relationship:
+    """Return the reverse relationship of a given relationship"""
     return Relationship.query.filter_by(start=rel.end, end=rel.start).first()
 
 #### ERROR HANDLING ####
@@ -167,7 +170,20 @@ def api_create_node():
         return create_node(node_type)
 
 # Create a new relationship via function
-def _create_relationship(start, end, rel, ler):
+def _create_relationship(start, end, rel, ler) -> tuple[str, Relationship]:
+    """
+    Create a new relationship between two nodes.  This function is called by the create_relationship function
+    
+    Args:
+        start (int): the id of the start node
+        end (int): the id of the end node
+        rel (int): the relationship text
+        ler (int): the reverse relationship text
+
+    Returns:
+        str - the id of the created relationship
+        Relationship - the created relationship object
+    """
     start_node = Node.query.get(start)
     if not start_node:
         abort(400, f"There doesn't exist a start node with id {start}")
@@ -194,6 +210,12 @@ def _create_relationship(start, end, rel, ler):
     return str(created_id), new_rel
 
 def create_relationship(start, end, rel, ler):
+    """
+    Create a new relationship between two nodes
+    
+    Returns:
+        dict - a dictionary of the created relationships
+    """
     id1, first_rel = _create_relationship(start, end, rel, ler)
     id2, second_rel = _create_relationship(end, start, rel, ler)
     return {
