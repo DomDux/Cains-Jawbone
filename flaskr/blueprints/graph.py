@@ -209,19 +209,20 @@ def _create_relationship(start, end, rel, ler) -> tuple[str, Relationship]:
     created_id = new_rel.id
     return str(created_id), new_rel
 
-def create_relationship(start, end, rel, ler):
+def create_relationship(start: int, end: int, rel: str, ler: str) -> tuple[Relationship, Relationship]:
     """
     Create a new relationship between two nodes
     
     Returns:
-        dict - a dictionary of the created relationships
+        tuple - The forward and reverse relationships created
     """
     id1, first_rel = _create_relationship(start, end, rel, ler)
     id2, second_rel = _create_relationship(end, start, rel, ler)
-    return {
-        id1: _return_relationship(first_rel),
-        id2: _return_relationship(second_rel)
-    }
+    # return {
+    #     id1: _return_relationship(first_rel),
+    #     id2: _return_relationship(second_rel)
+    # }
+    return (first_rel, second_rel)
 
 # Create 2 new relationships via ENDPOINT (1 for forward relationship, 1 for backwards)
 @bp.route('/relationship/create', methods=["POST"])
@@ -233,7 +234,11 @@ def api_create_relationship():
     forward_relationship = data.get('forward_relationship')
     reverse_relationship = data.get('reverse_relationship')
 
-    return create_relationship(start, end, forward_relationship, reverse_relationship)
+    forward_rel, backward_rel = create_relationship(start, end, forward_relationship, reverse_relationship)
+    return {
+        str(forward_rel.id): _return_relationship(forward_rel),
+        str(backward_rel.id): _return_relationship(backward_rel)
+    }
 
 
 

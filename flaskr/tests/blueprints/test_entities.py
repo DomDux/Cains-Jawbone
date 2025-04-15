@@ -50,12 +50,12 @@ def test_hard_delete_entity(session):
 def test_link_entities(session):
     person = create_entity('person', name="John Doe", content="Person content", gender="Male")
     location = create_entity('location', name="Test Location", content="Location content", country="Country", district="District", town="Town")
-    rel_id, new_rel = link_entities(person, location, "visited", "was visited by")
-    assert new_rel.id is not None
-    assert new_rel.start == person.node_id
-    assert new_rel.end == location.node_id
-    assert new_rel.rel == "visited"
-    assert new_rel.ler == "was visited by"
+    forward_rel, back_rel = link_entities(person, location, "visited", "was visited by")
+    assert forward_rel.id is not None
+    assert forward_rel.start == person.node_id
+    assert forward_rel.end == location.node_id
+    assert forward_rel.rel == "visited"
+    assert forward_rel.ler == "was visited by"
 
 def test_get_linked_nodes(session):
     person = create_entity('person', name="John Doe", content="Person content", gender="Male")

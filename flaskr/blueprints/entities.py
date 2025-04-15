@@ -212,9 +212,23 @@ def api_create_tags():
 
 # Call this function to create a relationship between two entites e.g. a note and a tag, a person and a note, a location and a tag etc
 def link_entities(e1, e2, rel, ler):
+    """
+    Link two entities by creating a relationship between their corresponding nodes.  The relationship is bi-directional.
+    e.g. a person visited a location, the location was visited by a person.
+    
+    Args:
+        e1: The first entity (e.g. person, location, event, tag)
+        e2: The second entity (e.g. person, location, event, tag)
+        rel: The relationship type (e.g. "visited", "attended", "tagged")
+        ler: The reverse relationship type (e.g. "was visited by", "was attended by", "was tagged by")
+        
+    Returns:
+        forward_rel: The forward relationship object
+        backward_rel: The backward relationship object
+    """
     node_1, node_2 = e1.node_id, e2.node_id
-    rel_id, new_rel = create_relationship(node_1, node_2, rel, ler)
-    return rel_id, new_rel
+    forward_rel, backward_rel = create_relationship(node_1, node_2, rel, ler)
+    return forward_rel, backward_rel
 
 # Get all the linked nodes from an e.g. tag
 def get_linked_nodes(entity):
