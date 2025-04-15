@@ -243,8 +243,17 @@ def api_create_relationship():
 
 # TODO:  Update relationship text
 # "Soft" delete node by updating value of deleted field
+def soft_delete_node(node: Node) -> Node:
+    """Soft delete a node by setting its deleted field to 1"""
+    node.deleted = 1
+    # TODO: Soft delete all relationships associated with this node
+    # relationships = Relationship.query.filter((Relationship.start == node.id) | (Relationship.end == node.id)).all()
+    db.session.commit()
+    db.session.refresh(node)
+    return node
+
 @bp.route('/node/delete', methods=["PUT"])
-def soft_delete_node():
+def api_soft_delete_node():
     args = request.args
     id = args.get('id')
     if id is None:
@@ -252,13 +261,21 @@ def soft_delete_node():
     node = Node.query.get(id)
     if node is None:
         abort(404, f"Could not find node with id {id}")
-    node.deleted = 1
-    db.session.commit()
+    soft_delete_node(node)
     return _return_node(node)
 
 # "Soft" delete relationship by updating value of deleted field
+def soft_delete_rel(rel: Relationship) -> Relationship:
+    rel.deleted = 1
+    reverse_rel = _relationship_partner(rel)
+    if reverse_rel is not None:
+        reverse_rel.deleted = 1
+    db.session.commit()
+    db.session.refresh(rel)
+    return rel
+
 @bp.route('/relationship/delete', methods=["PUT"])
-def soft_delete_rel():
+def api_soft_delete_rel():
     args = request.args
     id = args.get('id')
     if id is None:
@@ -270,9 +287,8 @@ def soft_delete_rel():
     if reverse_rel is None:
         abort(404, "Could not find the partner relationship")
     
-    rel.deleted = 1
-    reverse_rel.deleted = 1
-    db.session.commit()
+    soft_delete_rel(rel)
+    # Return the relationship and its reverse relationship
     return {
         str(id): _return_relationship(rel),
         str(reverse_rel.id): _return_relationship(reverse_rel)
@@ -312,15 +328,20 @@ def merge():
 #######################
 
 # Delete node of given id
+def delete_node(node: Node):
+    """Delete a node from the database"""
+    db.session.delete(node)
+    db.session.commit()
+    return node
+
 @bp.route('/node/harddelete', methods=["DELETE"])
-def delete_node():
+def api_delete_node():
     args = request.args
     id = args.get('id')
     if id is None:
         abort(400, "ID of the resource should be provided")
     node_to_delete = Node.query.get_or_404(id, description=f"There does not exist a node with id {id}")
-    db.session.delete(node_to_delete)
-    db.session.commit()
+    delete_node(node_to_delete)
     return f"Deleted node {id}"
 
 # TODO:  Delete relationship of given id
