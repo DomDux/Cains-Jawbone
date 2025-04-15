@@ -126,6 +126,10 @@ def get_people(ids):
     people = [Person.query.get_or_404(id) for id in ids]
     return people
 
+def get_people_from_nodes(node_ids: list[int]):
+    people = db.session.query(Person).filter(Person.node_id.in_(node_ids)).all()
+    return people
+
 @people_bp.route('/', methods=["GET"])
 def api_get_people():
     ids = get_params('id')
@@ -145,8 +149,12 @@ def api_create_people():
 # LOCATIONS
 ######################
 
-def get_locations(ids):
+def get_locations(ids: list[int]):
     loc = [Location.query.get_or_404(id) for id in ids]
+    return loc
+
+def get_locations_from_nodes(node_ids: list[int]):
+    loc = db.session.query(Location).filter(Location.node_id.in_(node_ids)).all()
     return loc
 
 @loc_bp.route('/', methods=["GET"])
@@ -172,6 +180,10 @@ def get_events(ids):
     loc = [Event.query.get_or_404(id) for id in ids]
     return loc
 
+def get_events_from_nodes(node_ids: list[int]):
+    event = db.session.query(Event).filter(Event.node_id.in_(node_ids)).all()
+    return event
+
 @event_bp.route('/', methods=["GET"])
 def api_get_events():
     ids = get_params('id')
@@ -192,6 +204,10 @@ def api_create_events():
 def get_tags(ids):
     tag = [Tag.query.get_or_404(id) for id in ids]
     return tag
+
+def get_tags_from_nodes(node_ids: list[int]):
+    tags = db.session.query(Tag).filter(Tag.node_id.in_(node_ids)).all()
+    return tags
 
 @tag_bp.route('/', methods=["GET"])
 def api_get_tags():
@@ -221,7 +237,7 @@ def link_entities(e1, e2, rel, ler):
         e2: The second entity (e.g. person, location, event, tag)
         rel: The relationship type (e.g. "visited", "attended", "tagged")
         ler: The reverse relationship type (e.g. "was visited by", "was attended by", "was tagged by")
-        
+
     Returns:
         forward_rel: The forward relationship object
         backward_rel: The backward relationship object
@@ -231,21 +247,41 @@ def link_entities(e1, e2, rel, ler):
     return forward_rel, backward_rel
 
 # Get all the linked nodes from an e.g. tag
-def get_linked_nodes(entity):
-    rels = Relationship.query.filter(Relationship.start == entity.node_id).all()
+def get_linked_nodes(entity) -> list:
+    """
+    Get all the linked nodes from an entity.
+    Args:
+        entity: The entity record to get linked nodes from (e.g. person, location, event, tag)
+    Returns:
+        A list of linked nodes
+    """
+    # rels = Relationship.query.filter(Relationship.start == entity.node_id).all()
+    rels = db.session.query(Relationship).filter(Relationship.start == entity.node_id).all()
     linked_node_ids = [r.end for r in rels]
     nodes = [Node.query.get_or_404(id) for id in linked_node_ids]
     return nodes
 
 # Call this function to get the linked e.g. tags from an entity
-def get_linked_entities(entity, expected_type):
-    nodes = get_linked_nodes(entity).filter(Node.node_type == expected_type)
+def get_linked_entities(entity, expected_type: str):
+    """
+    Get the linked entities of a specific type from an entity.
+    Args:
+        entity: The entity record to get linked entities from (e.g. person, location, event, tag)
+        expected_type (str): The type of linked entities to retrieve (e.g. "person", "location", "event", "tag")
+    Returns:
+        A list of linked entities of the specified type
+    """
+    all_nodes = get_linked_nodes(entity)
+    nodes = [n for n in all_nodes if n.node_type == expected_type]
+    if not nodes:
+        return None
+    
     ids = [node.id for node in nodes]
     RETRIEVE_MAP= {
-        'person': get_people,
-        'location': get_locations,
-        'event': get_events,
-        'tag': get_tags
+        'person': get_people_from_nodes,
+        'location': get_locations_from_nodes,
+        'event': get_events_from_nodes,
+        'tag': get_tags_from_nodes
     }
     get_fn = RETRIEVE_MAP[expected_type]
     return get_fn(ids)
