@@ -302,11 +302,15 @@ def api_soft_delete_rel():
 # Mark node as merged by updating value of merged field.  
 # This is called in conjunction with merge functions in other blueprints
 # In the other functions, we create the merged node first and then call this function
-def merge_nodes(merged_node, nodes):
+def merge_nodes(merged_node: Node, nodes: list[Node]) -> Node:
+    """Mark nodes as merged by setting their merged field to the id of the merged node"""
     for node in nodes:
         node.merged = merged_node.id
+
+        create_relationship(merged_node.id, node.id, "merged", "was merged into")
+    
     db.session.commit()
-    return [merged_node]+nodes
+    return merged_node
 
 @bp.route('/node/merge',  methods=["PUT", "POST"])
 def merge():

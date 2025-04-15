@@ -90,6 +90,14 @@ def _create_tag(node_id, name):
     return tag
 
 def create_entity(model_class, **kwargs):
+    """
+    Create an entity of the specified type (e.g. person, location, event, tag) with the given attributes.
+    Args:
+        model_class (str): The type of entity to create (e.g. "person", "location", "event", "tag")
+        **kwargs: Additional attributes for the entity
+    Returns:
+        The newly created entity object
+    """
     # First create a corresponding node
     node_id = create_node(model_class)
 
@@ -287,7 +295,16 @@ def get_linked_entities(entity, expected_type: str):
     return get_fn(ids)
 
 # Merge into a new entity
-def merge_into_new(entities, entity_type, **kwargs):
+def merge_into_new(entities: list, entity_type: str, **kwargs):
+    """
+    Merge multiple entities into a new entity of the specified type.
+    Args:
+        entities: A list of entity records to merge (e.g. people, locations, events, tags)
+        entity_type (str): The type of the new entity to create (e.g. "person", "location", "event", "tag")
+        **kwargs: Additional attributes for the new entity
+    Returns:
+        The new entity created by merging the specified entities
+    """
     nodes = [Node.query.get_or_404(e.node_id) for e in entities]
     
     new_entity = create_entity(entity_type, **kwargs)
