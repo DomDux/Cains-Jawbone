@@ -96,8 +96,8 @@ def api_search_notes():
     return [_return_note(n) for n in list(notes)]
 
 # Return all the notes linked to a page
-def get_page_notes(page):
-    notes = Note.query.filter(Note.page_number == page.page_number)
+def get_page_notes(page) -> list[Note]:
+    notes = Note.query.filter(Note.page_number == page.page_number).all()
     return notes
 
 @bp.route('/on-page', methods=["GET"])
