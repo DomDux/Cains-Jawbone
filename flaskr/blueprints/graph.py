@@ -37,7 +37,8 @@ from ..models import *
 bp = Blueprint('graph', __name__, url_prefix='/graph')
 
 # Helper return functions.  Return a dictionary for the corresponding objects
-def _return_node(node):
+def _return_node(node: Node) -> dict:
+    """Return a dictionary of the node object"""
     return {
         'id': node.id,
         'created': node.created,
@@ -46,7 +47,8 @@ def _return_node(node):
         'node_type': node.node_type
     }
 
-def _return_relationship(rel):
+def _return_relationship(rel: Relationship) -> dict:
+    """Return a dictionary of the relationship object"""
     return {
         'id':rel.id,
         'created': rel.created,
@@ -57,7 +59,8 @@ def _return_relationship(rel):
         'deleted' : rel.deleted
     }
 
-def _relationship_partner(rel):
+def _relationship_partner(rel: Relationship) -> Relationship:
+    """Return the reverse relationship of a given relationship"""
     return Relationship.query.filter_by(start=rel.end, end=rel.start).first()
 
 #### ERROR HANDLING ####
@@ -167,7 +170,20 @@ def api_create_node():
         return create_node(node_type)
 
 # Create a new relationship via function
-def _create_relationship(start, end, rel, ler):
+def _create_relationship(start, end, rel, ler) -> tuple[str, Relationship]:
+    """
+    Create a new relationship between two nodes.  This function is called by the create_relationship function
+    
+    Args:
+        start (int): the id of the start node
+        end (int): the id of the end node
+        rel (int): the relationship text
+        ler (int): the reverse relationship text
+
+    Returns:
+        str - the id of the created relationship
+        Relationship - the created relationship object
+    """
     start_node = Node.query.get(start)
     if not start_node:
         abort(400, f"There doesn't exist a start node with id {start}")
@@ -193,13 +209,20 @@ def _create_relationship(start, end, rel, ler):
     created_id = new_rel.id
     return str(created_id), new_rel
 
-def create_relationship(start, end, rel, ler):
+def create_relationship(start: int, end: int, rel: str, ler: str) -> tuple[Relationship, Relationship]:
+    """
+    Create a new relationship between two nodes
+    
+    Returns:
+        tuple - The forward and reverse relationships created
+    """
     id1, first_rel = _create_relationship(start, end, rel, ler)
     id2, second_rel = _create_relationship(end, start, rel, ler)
-    return {
-        id1: _return_relationship(first_rel),
-        id2: _return_relationship(second_rel)
-    }
+    # return {
+    #     id1: _return_relationship(first_rel),
+    #     id2: _return_relationship(second_rel)
+    # }
+    return (first_rel, second_rel)
 
 # Create 2 new relationships via ENDPOINT (1 for forward relationship, 1 for backwards)
 @bp.route('/relationship/create', methods=["POST"])
@@ -211,7 +234,11 @@ def api_create_relationship():
     forward_relationship = data.get('forward_relationship')
     reverse_relationship = data.get('reverse_relationship')
 
-    return create_relationship(start, end, forward_relationship, reverse_relationship)
+    forward_rel, backward_rel = create_relationship(start, end, forward_relationship, reverse_relationship)
+    return {
+        str(forward_rel.id): _return_relationship(forward_rel),
+        str(backward_rel.id): _return_relationship(backward_rel)
+    }
 
 
 
@@ -221,8 +248,17 @@ def api_create_relationship():
 
 # TODO:  Update relationship text
 # "Soft" delete node by updating value of deleted field
+def soft_delete_node(node: Node) -> Node:
+    """Soft delete a node by setting its deleted field to 1"""
+    node.deleted = 1
+    # TODO: Soft delete all relationships associated with this node
+    # relationships = Relationship.query.filter((Relationship.start == node.id) | (Relationship.end == node.id)).all()
+    db.session.commit()
+    db.session.refresh(node)
+    return node
+
 @bp.route('/node/delete', methods=["PUT"])
-def soft_delete_node():
+def api_soft_delete_node():
     args = request.args
     id = args.get('id')
     if id is None:
@@ -230,13 +266,21 @@ def soft_delete_node():
     node = Node.query.get(id)
     if node is None:
         abort(404, f"Could not find node with id {id}")
-    node.deleted = 1
-    db.session.commit()
+    soft_delete_node(node)
     return _return_node(node)
 
 # "Soft" delete relationship by updating value of deleted field
+def soft_delete_rel(rel: Relationship) -> Relationship:
+    rel.deleted = 1
+    reverse_rel = _relationship_partner(rel)
+    if reverse_rel is not None:
+        reverse_rel.deleted = 1
+    db.session.commit()
+    db.session.refresh(rel)
+    return rel
+
 @bp.route('/relationship/delete', methods=["PUT"])
-def soft_delete_rel():
+def api_soft_delete_rel():
     args = request.args
     id = args.get('id')
     if id is None:
@@ -248,9 +292,8 @@ def soft_delete_rel():
     if reverse_rel is None:
         abort(404, "Could not find the partner relationship")
     
-    rel.deleted = 1
-    reverse_rel.deleted = 1
-    db.session.commit()
+    soft_delete_rel(rel)
+    # Return the relationship and its reverse relationship
     return {
         str(id): _return_relationship(rel),
         str(reverse_rel.id): _return_relationship(reverse_rel)
@@ -259,16 +302,23 @@ def soft_delete_rel():
 # Mark node as merged by updating value of merged field.  
 # This is called in conjunction with merge functions in other blueprints
 # In the other functions, we create the merged node first and then call this function
-def merge_nodes(merged_node, nodes):
+def merge_nodes(merged_node: Node, nodes: list[Node]) -> Node:
+    """Mark nodes as merged by setting their merged field to the id of the merged node"""
     for node in nodes:
         node.merged = merged_node.id
+
+        create_relationship(merged_node.id, node.id, "merged", "was merged into")
+    
     db.session.commit()
-    return [merged_node]+nodes
+    return merged_node
 
 @bp.route('/node/merge',  methods=["PUT", "POST"])
 def merge():
-    nodes = api_get_nodes()
-    nodes_to_merge = [Node.query.get_or_404(n['id'], f"Could not find node {n['id']} to merge") for n in nodes]
+    data = request.get_json()
+    node_ids = data.get('id')
+    if not node_ids or not isinstance(node_ids, list):
+        abort(400, "A list of node IDs must be provided")
+    nodes_to_merge = [Node.query.get_or_404(node_id, f"Could not find node {node_id} to merge") for node_id in node_ids]
         
     node_types = [n.node_type for n in nodes_to_merge]
     distinct_node_types = list(set(node_types))
@@ -287,15 +337,20 @@ def merge():
 #######################
 
 # Delete node of given id
+def delete_node(node: Node):
+    """Delete a node from the database"""
+    db.session.delete(node)
+    db.session.commit()
+    return node
+
 @bp.route('/node/harddelete', methods=["DELETE"])
-def delete_node():
+def api_delete_node():
     args = request.args
     id = args.get('id')
     if id is None:
         abort(400, "ID of the resource should be provided")
     node_to_delete = Node.query.get_or_404(id, description=f"There does not exist a node with id {id}")
-    db.session.delete(node_to_delete)
-    db.session.commit()
+    delete_node(node_to_delete)
     return f"Deleted node {id}"
 
 # TODO:  Delete relationship of given id

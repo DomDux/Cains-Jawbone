@@ -16,22 +16,17 @@ def create_app(test_config=None):
     app = Flask(__name__)
     CORS(app, resources={r"/page/*": {"origins": "http://localhost:3000"}})
 
-    app.config.from_object(Config)
+    if test_config is None:
+        app.config.from_object(Config)
+    else:
+        app.config.from_mapping(test_config)
     db.init_app(app)
     migrate = Migrate(app, db)
 
     with app.app_context():
         db.create_all()
-        populate_pages()
-
-    # App Config:
-    if test_config is None:
-        # load the instance config, if it exists, when not testing
-        app.config.from_pyfile('config.py', silent=True)
-    else:
-        # load the test config if passed in
-        app.config.from_mapping(test_config)
-
+        if test_config is None:
+            populate_pages()
 
     # Ensure the instance folder exists
     try:

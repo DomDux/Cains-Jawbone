@@ -23,8 +23,8 @@ def populate_pages():
     db.session.commit()
 
 
-def get_page(page_number):
-    page = Page.query.get(page_number)
+def get_page(page_number: int) -> Page:
+    page = db.session.query(Page).filter(Page.page_number == page_number).first()
     return page
 
 @bp.route('/', methods=["GET"])
@@ -33,6 +33,8 @@ def api_get_page():
     if not page_number:
         return "Page not found", 404
     page = get_page(page_number)
+    if not page:
+        return "Page not found", 404
     return page.content
 
 
@@ -48,6 +50,8 @@ def api_edit_page_content():
     if not page_number:
         return "Page not found", 404
     page = get_page(page_number)
+    if not page:
+        return "Page not found", 404
 
     data = request.get_json()
     new_content = data.get('content')
