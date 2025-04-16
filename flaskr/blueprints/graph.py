@@ -76,17 +76,17 @@ class InvalidNodeIDError(HTTPException):
 def handle_node_not_found_error(e):
     response = {
         "error": "NodeNotFoundError",
-        "message": e.description
+        "message": e.description,
+        "status_code": e.code
     }
-    response.status_code = e.code
     return response
 
 def handle_invalid_node_id_error(e):
     response = {
         "error": "InvalidNodeIDError",
-        "message": e.description
+        "message": e.description,
+        "status_code": e.code
     }
-    response.status_code = e.code
     return response
 
 
