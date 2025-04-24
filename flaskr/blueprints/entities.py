@@ -309,3 +309,24 @@ def merge_into_new(entities: list, entity_type: str, **kwargs):
     
     new_entity = create_entity(entity_type, **kwargs)
     return merge_nodes(new_entity, nodes)
+
+def get_entity_from_node(node_id: int):
+    """
+    Get the entity corresponding to a node ID.
+    Args:
+        node_id (int): The ID of the node to retrieve the entity from
+    Returns:
+        The entity object of the specified type
+    """
+    RETRIEVE_MAP = {
+        'person': Person,
+        'location': Location,
+        'event': Event,
+        'tag': Tag
+    }
+    node = Node.query.get_or_404(node_id)
+    entity_type = node.node_type.lower()
+    if entity_type not in RETRIEVE_MAP:
+        raise HTTPException(f"Entity type '{entity_type}' not found.")
+    entity_class = RETRIEVE_MAP[entity_type]
+    return entity_class.query.filter(entity_class.node_id == node_id).first()
