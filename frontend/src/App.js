@@ -7,6 +7,7 @@ import PageComponent, { PageViewComponent } from './components/PageComponent';
 import Navbar from './components/Navbar';
 import ArrowButton from './components/ArrowButton';
 import NoteTab from './components/NoteTab';
+import { NetworkDiagram } from './components/NetworkDiagram';
 
 function App() {
   const [pageNo, setPageNo] = useState(1);
@@ -67,7 +68,7 @@ function App() {
     <div className='App'>
       <Navbar />
       <PageViewComponent pageNumber={pageNo} />
-
+      <NetworkDiagram width={400} height={320} />
     </div>
   )
 }
