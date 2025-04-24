@@ -82,3 +82,42 @@ def test_create_event(session):
     assert event.id is not None
     assert event.name == "Test Event"
     assert event.content == "Event content"
+
+
+def test_serialiser(session):
+    # Create a sample node and relationship
+    node = Node(node_type="testtype")
+    session.add(node)
+    session.commit()
+
+    relationship = Relationship(start=node.id, end=node.id, rel="related", ler="testler")
+    session.add(relationship)
+    session.commit()
+
+    # Serialize the node and relationship
+    serialized_node = {
+        'id': node.id,
+        'created': node.created,
+        'deleted': node.deleted,
+        'merged': node.merged,
+        'node_type': node.node_type
+    }
+
+    serialized_relationship = {
+        'id': relationship.id,
+        'created': relationship.created,
+        'start': relationship.start,
+        'end': relationship.end,
+        'rel': relationship.rel,
+        'ler': relationship.ler,
+        'deleted': relationship.deleted
+    }
+
+    assert serialized_node['id'] == node.id
+    assert serialized_node['node_type'] == "testtype"
+
+    assert serialized_relationship['id'] == relationship.id
+    assert serialized_relationship['rel'] == "related"
+    assert serialized_relationship['start'] == node.id
+    assert serialized_relationship['end'] == node.id
+    assert serialized_relationship['ler'] == "testler"

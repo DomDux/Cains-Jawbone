@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import json
 
 
 db = SQLAlchemy()
@@ -227,6 +228,25 @@ class Event(db.Model):
     
     def __repr__(self) -> str:
         return f"<Event {self.id}>"
+    
+
+class Serialiser:
+    """
+    A class to serialise database models to dictionaries.
+    """
+    def __init__(self, model):
+        self.model = model
+
+    def to_dict(self) -> dict:
+        """Convert the model instance to a dictionary."""
+        return {column.name: getattr(self.model, column.name) for column in self.model.__table__.columns}
+
+    def to_json(self) -> str:
+        """Convert the model instance to a JSON string."""
+        return json.dumps(self.to_dict(), default=str)
+
+    def __repr__(self) -> str:
+        return f"<Serialiser for {self.model.__class__.__name__}>"
 
 if __name__ == '__main__':
     db.create_all()
