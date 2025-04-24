@@ -234,19 +234,26 @@ class Serialiser:
     """
     A class to serialise database models to dictionaries.
     """
-    def __init__(self, model):
-        self.model = model
-
-    def to_dict(self) -> dict:
+    @staticmethod
+    def to_dict(model, object) -> dict:
         """Convert the model instance to a dictionary."""
-        return {column.name: getattr(self.model, column.name) for column in self.model.__table__.columns}
+        return {column.name: getattr(object, column.name) for column in model.__table__.columns}
 
-    def to_json(self) -> str:
+    @staticmethod
+    def to_json(model, object) -> str:
         """Convert the model instance to a JSON string."""
-        return json.dumps(self.to_dict(), default=str)
+        return json.dumps(Serialiser.to_dict(model, object), default=str)
+    
+    @staticmethod
+    def to_dict_list(model, objects) -> list[dict]:
+        """Convert a list of model instances to a dictionary."""
+        return [Serialiser.to_dict(model, obj) for obj in objects]
+    
+    @staticmethod
+    def to_json_list(model, objects) -> str:
+        """Convert a list of model instances to a JSON string."""
+        return json.dumps(Serialiser.to_dict_list(model, objects), default=str)
 
-    def __repr__(self) -> str:
-        return f"<Serialiser for {self.model.__class__.__name__}>"
 
 if __name__ == '__main__':
     db.create_all()

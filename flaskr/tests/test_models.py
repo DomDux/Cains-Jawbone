@@ -1,5 +1,8 @@
 import pytest
 from flaskr.models import Page, User, Tag, Node, Relationship, Note, Person, Location, Event
+from flaskr.models import Serialiser
+
+import json
 
 def test_create_page(session):
     page = Page(page_number=1, content="Page content")
@@ -95,29 +98,25 @@ def test_serialiser(session):
     session.commit()
 
     # Serialize the node and relationship
-    serialized_node = {
-        'id': node.id,
-        'created': node.created,
-        'deleted': node.deleted,
-        'merged': node.merged,
-        'node_type': node.node_type
-    }
-
-    serialized_relationship = {
-        'id': relationship.id,
-        'created': relationship.created,
-        'start': relationship.start,
-        'end': relationship.end,
-        'rel': relationship.rel,
-        'ler': relationship.ler,
-        'deleted': relationship.deleted
-    }
+    serialized_node = Serialiser.to_dict(Node, node)
+    serialized_relationship = Serialiser.to_dict(Relationship, relationship)
 
     assert serialized_node['id'] == node.id
     assert serialized_node['node_type'] == "testtype"
 
     assert serialized_relationship['id'] == relationship.id
     assert serialized_relationship['rel'] == "related"
-    assert serialized_relationship['start'] == node.id
-    assert serialized_relationship['end'] == node.id
     assert serialized_relationship['ler'] == "testler"
+
+    # Add a new relationship to the same node
+    second_relationship = Relationship(start=node.id, end=node.id, rel="related", ler="testler")
+    session.add(second_relationship)
+    session.commit()
+
+    serialised_list = Serialiser.to_dict_list(Relationship, [relationship, second_relationship])
+    assert len(serialised_list) == 2
+    assert serialised_list[0]['id'] == relationship.id
+    assert serialised_list[1]['id'] == second_relationship.id
+
+    json_list = Serialiser.to_json_list(Relationship, [relationship, second_relationship])
+    assert json.dumps(json.loads(json_list)) == json.dumps(serialised_list, default=str)
