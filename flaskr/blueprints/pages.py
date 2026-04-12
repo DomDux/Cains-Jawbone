@@ -1,13 +1,15 @@
 import os
+from pathlib import Path
 
 from flask import Blueprint, request
 from flaskr import db
 from ..models import Page
 
 bp = Blueprint('page', __name__, url_prefix='/page')
+root_dir = Path(__file__).parent.parent.parent
 
 def populate_pages():
-    data_folder = r'C:\Users\domjd\OneDrive\Documents\Projects\Cains Jawbone\data\processed'
+    data_folder = root_dir.joinpath('data', 'processed')
     for filename in os.listdir(data_folder):
         if filename.endswith('.txt') and filename.startswith('page_'):
             page_id = int(filename.split('_')[1].split('.')[0])
