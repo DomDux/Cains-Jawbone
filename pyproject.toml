@@ -4,6 +4,23 @@ version = "1.0.0"
 description = "The basic blog app built in the Flask tutorial."
 dependencies = [
     "flask",
+    "flask-migrate",
+    "flask-cors",
+]
+
+
+[project.optional-dependencies]
+ocr = [
+    "pytesseract", 
+    "Pillow", 
+    "pandas", 
+    "openpyxl",
+    "opencv-python",
+    "python-dotenv",
+]
+dev = [
+    "pytest", 
+    "coverage"
 ]
 
 [build-system]

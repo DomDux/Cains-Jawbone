@@ -1,12 +1,16 @@
 # Ignore files that you didn't write
 
-venv
+.venv
+.venv-ocr
+.venv-flask
 __pycache__
-env
+.env
 .pytest_cache
 cainsjawbone.db
+.coverage
 
 
 flaskr/cainsjawbone.db
 
 /notes.xlsx
+data/processed

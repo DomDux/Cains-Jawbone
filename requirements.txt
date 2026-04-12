@@ -8,7 +8,6 @@ Flask==3.0.3
 Flask-Cors==4.0.1
 Flask-Migrate==4.0.7
 Flask-SQLAlchemy==3.1.1
--e git+https://github.com/DomDux/Cains-Jawbone.git@e1d0a9c7c42755a2e23ea74b088262f881a37abc#egg=flaskr
 greenlet==3.0.3
 iniconfig==2.0.0
 itsdangerous==2.2.0
@@ -27,3 +26,5 @@ SQLAlchemy==2.0.31
 tomli==2.0.1
 typing_extensions==4.12.2
 Werkzeug==3.0.3
+openpyxl
+pandas
