@@ -20,6 +20,7 @@ ocr = [
 ]
 dev = [
     "pytest", 
+    "pytest-cov",
     "coverage"
 ]
 
